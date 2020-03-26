@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Morpio,</title>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+        <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <link href="css/style.css" rel="stylesheet">
+        <script src="https://kit.fontawesome.com/325025eb63.js" crossorigin="anonymous"></script>
+    </head>
+
+    <body>
+
+        
+        
+        <script>
+          $(function () {
+            var socket = io();
+
+            let id = "";
+
+            function selectCase(dep, id){
+                let depJoueur = {
+                    "dep" : dep,
+                    "joueur" : id
+                };
+                socket.emit('joueur joue', depJoueur);
+            }
+
+            socket.on('connect', function(){
+                id = socket.io.engine.id;
+
+                $(".carreSize").bind({
+                    click : function(){
+                    selectCase($(this).attr("id"),id)
+                }});
+
+                socket.on("erreur joueur", function(msg){
+                    alert(msg);
+                });
+
+            });
+
+            socket.on("succes dep", function(res){
+                console.log(res.dep);
+                $("#"+res.dep).append(res.forme);
+            });
+
+            socket.on("loose player",function(msg){
+                $("#test").text(msg);
+            })
+
+            socket.on('victory player', function(msg){
+                $("#test").text(msg);
+            })
+
+            socket.on('equals player', function(msg){
+                $("#test").text(msg);
+            })
+
+            socket.on("stop game",function(res){
+                //On enleve l'event handler du click
+                $(".carreSize").unbind('click');
+            });
+
+            $("#restartGame").on('click',function(){
+                socket.emit("restart game", true);
+            })
+
+            socket.on("restart game",function(yes){
+                $("#test").text("Morpion by iVax");
+                $(".carreSize").empty();
+                $(".carreSize").unbind('click');
+                $(".carreSize").bind({
+                    click : function(){
+                    selectCase($(this).attr("id"),id)
+                }});
+
+            });
+                
+            
+          });
+        </script>
+
+        <div class="container">
+            <h1 id="test">Morpion by iVax</h1>
+            <div class="morpion">
+                <div class="row">
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="0_0">
+                        <!--<i class="far fa-circle fa-5x" style="color:red;"></i>!-->
+                    </div>
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="0_1">
+                        <!--<i class="fas fa-times fa-5x" style="color:blue;"></i>!-->
+                    </div>
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="0_2"></div>
+                </div>
+                <div class="row">
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="1_0"></div>
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="1_1"></div>
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="1_2"></div>
+                </div>
+                <div class="row">
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="2_0"></div>
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="2_1"></div>
+                    <div class="col-2 border border-dark carreSize d-flex align-items-center justify-content-center" id="2_2"></div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <button id="restartGame">Restart game</button>
+            </div>
+        </div>
+        
+
+
+    </body>
+
+</html>
+
