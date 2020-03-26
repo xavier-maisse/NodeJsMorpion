@@ -4,6 +4,8 @@ var path = require('path');
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
+var nbJoueur = 0;
+
 var nbrCoupJoue = 0;
 //Sauvegarde du dernier joueur
 var lastPlayer = "";
@@ -64,7 +66,27 @@ function joueurWin(joueur){
 }
 
 io.on('connection', function(socket){
-	
+	++nbJoueur;
+
+	if(nbJoueur == 2){
+		io.emit("can play",true);
+	}else{
+		io.emit("can play",false);
+	}
+
+	socket.on('disconnect', function(){
+    	--nbJoueur;
+    	if(nbJoueur < 2){
+    		io.emit("can play",false);
+    		//La partie est alors annulée
+    		nbrCoupJoue = 0;
+			lastPlayer = "";
+			matrix = Array(3).fill(null).map(() => Array(3).fill(0));
+			mapJoueur.clear();
+			io.emit("restart game",true);
+    	}
+  	});
+
 	socket.on('joueur joue',function(joueurDep){
 		//On verifie que se ne soit pas le meme joueur qui rejoue
 		if(lastPlayer != joueurDep.joueur){
@@ -108,3 +130,5 @@ io.on('connection', function(socket){
 http.listen(3000, function(){
   console.log('listening on *:80');
 });
+
+//process.env.ALWAYSDATA_HTTPD_PORT, process.env.ALWAYSDATA_HTTPD_IP
